@@ -12,8 +12,8 @@ jobs:
         with:
           submodules: 'recursive'
 
-      - name: Install Dependencies
-        uses: aseprite/actions/setup-ninja@main
+      - name: Install Ninja Build Tool
+        uses: seanmiddleditch/gha-setup-ninja@v5
 
       - name: Fetch and Cache Skia Graphics Library
         uses: actions/cache@v4
