@@ -1,1 +1,41 @@
+name: Build Aseprite App
+on:
+  workflow_dispatch: # Allows you to trigger this manually with a button
 
+jobs:
+  build:
+    name: Compile Aseprite
+    runs-on: windows-latest
+    steps:
+      - name: Checkout Aseprite Repository
+        uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+
+      - name: Install Dependencies
+        uses: aseprite/actions/setup-ninja@main
+
+      - name: Fetch and Cache Skia Graphics Library
+        uses: actions/cache@v4
+        id: skia-cache
+        with:
+          path: skia
+          key: skia-windows-release
+
+      - name: Download Skia Prebuilt (If not cached)
+        if: steps.skia-cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir skia
+          curl -L https://github.com --output skia.zip
+          tar -xf skia.zip -C skia
+
+      - name: Configure CMake & Compile
+        run: |
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo -DLAF_BACKEND=skia -DSKIA_DIR=$PWD/skia -DSKIA_LIBRARY_DIR=$PWD/skia/out/Release-x64
+          ninja -C build aseprite
+
+      - name: Upload Finished Executable
+        uses: actions/upload-artifact@v4
+        with:
+          name: Aseprite-Windows-Build
+          path: build/bin/
